@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, DateTime, Date, Table
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum, DateTime, Date, Table, UniqueConstraint
+from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship
 import enum
 from datetime import datetime, timezone
@@ -21,6 +22,7 @@ class Tarefa(Base):
       __tablename__ = "tarefas"
 
       id = Column(Integer, primary_key=True, index=True)
+      usuario_id = Column(String, index=True, nullable=False)
       titulo = Column(String(255), nullable=False)
       desc = Column(Text, nullable=True)
       status = Column(Enum(StatusEnum), default=StatusEnum.A_FAZER, nullable=False)
@@ -29,11 +31,23 @@ class Tarefa(Base):
 
       tags = relationship("Tag", secondary=tarefas_tags, back_populates="tarefas")
 
+ # Adicione este import lá no topo
+
 class Tag(Base):
-      __tablename__ = "tags"
+    __tablename__ = "tags"
 
-      id = Column(Integer, primary_key=True, index=True)
-      nome = Column(String(50), unique=True, nullable=False)
-      desc = Column(Text, nullable=True)
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(String, index=True, nullable=False)
+    nome = Column(String(50), nullable=False)
+    desc = Column(Text, nullable=True)
 
-      tarefas = relationship("Tarefa", secondary=tarefas_tags, back_populates="tags")
+    tarefas = relationship("Tarefa", secondary=tarefas_tags, back_populates="tags")
+    __table_args__ = (UniqueConstraint('nome', 'usuario_id', name='_nome_usuario_uc'),)
+
+class MensagemChat(Base):
+    __tablename__ = "mensagens_chat"
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(String, index=True, nullable=False)
+    role = Column(String) # 'ia' ou 'user'
+    texto = Column(Text, nullable=False)
+    criado_em = Column(DateTime(timezone=True), server_default=func.now())

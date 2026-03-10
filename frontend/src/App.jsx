@@ -1,32 +1,67 @@
-// src/App.jsx
 import { useState, useEffect, useCallback } from 'react'; 
 import './App.css'
 import { useTranslation } from 'react-i18next';
-import { ColunaKanban, CardTarefa } from './components/ColunaKanban' // 🎯 Removido CardEsqueleto
+import { ColunaKanban, CardTarefa } from './components/ColunaKanban'
 import { ChatSidebar } from './components/ChatSidebar'
 
 function App() {
   const { t } = useTranslation();
-  
-  // 🎯 Estado para armazenar as tarefas vindas do banco
   const [tarefas, setTarefas] = useState([]);
+  const [sessionReady, setSessionReady] = useState(false); // 🎯 Novo: Controle de prontidão do token
 
-  // 🎯 Função para buscar tarefas no FastAPI
-  const carregarTarefas = useCallback(async () => {
+  // 1. Função para garantir que o usuário tenha um "Passaporte" (Token)
+  const inicializarSessao = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8000/tarefas');
-      if (!response.ok) throw new Error("Erro ao carregar banco");
-      const data = await response.json();
-      setTarefas(data);
+      let token = localStorage.getItem('kanban_token');
+      
+      if (!token) {
+        console.log("Gerando nova sessão...");
+        const response = await fetch('http://localhost:8000/gerar-sessao');
+        const data = await response.json();
+        localStorage.setItem('kanban_token', data.token);
+      }
+      
+      setSessionReady(true); // Autoriza o carregamento das tarefas
     } catch (error) {
-      console.error("Erro na busca:", error);
+      console.error("Erro ao inicializar sessão:", error);
     }
   }, []);
 
-  // 🎯 Busca inicial ao abrir o site
+  // 2. Função para buscar tarefas usando o Token no Header
+  const carregarTarefas = useCallback(async () => {
+    const token = localStorage.getItem('kanban_token');
+    if (!token) return;
+
+    try {
+      const response = await fetch('http://localhost:8000/tarefas', {
+        headers: {
+          'Authorization': `Bearer ${token}` // 🎯 O "carimbo" de segurança
+        }
+      });
+
+      if (response.status === 401) {
+        // Token inválido/expirado? Reseta e tenta de novo
+        localStorage.removeItem('kanban_token');
+        setSessionReady(false);
+        inicializarSessao();
+        return;
+      }
+
+      const data = await response.json();
+      setTarefas(data);
+    } catch (error) {
+      console.error("Erro na busca de tarefas:", error);
+    }
+  }, [inicializarSessao]);
+
+  // Efeito inicial: Primeiro a sessão, depois os dados
   useEffect(() => {
-    carregarTarefas();
-  }, [carregarTarefas]);
+    if (!sessionReady) {
+      inicializarSessao();
+    } else {
+      carregarTarefas();
+    }
+  }, [sessionReady, inicializarSessao, carregarTarefas]);
 
   return (
     <div className="h-screen w-full fundo-animado-diagonal flex p-6 gap-6 font-sans box-border overflow-hidden">
@@ -62,8 +97,8 @@ function App() {
         </div>
       </main>
 
-      {/* 🎯 Sidebar que dispara o refresh via props.aoAtualizarBanco */}
-      <ChatSidebar aoAtualizarBanco={carregarTarefas} />
+      {/* Passamos o sessionReady para a Sidebar saber se pode enviar mensagens */}
+      <ChatSidebar aoAtualizarBanco={carregarTarefas} pronto={sessionReady} />
 
     </div>
   )

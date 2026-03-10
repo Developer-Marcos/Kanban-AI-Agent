@@ -7,3 +7,4 @@ langgraph
 langchain-google-genai
 langsmith
 dotenv
+pyjwt

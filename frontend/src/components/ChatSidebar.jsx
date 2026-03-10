@@ -59,35 +59,52 @@ export function ChatSidebar({ aoAtualizarBanco }) {
   setIsLoading(true); 
 
   try {
-    const response = await fetch('http://localhost:8000/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        mensagem: textoEnviado, 
-        thread_id: "sessao-padrao-1" 
-      }),
-    });
+  const token = localStorage.getItem('kanban_token');
 
-    if (!response.ok) throw new Error("Erro na rede");
+  const response = await fetch('http://localhost:8000/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}` // 🎯 O passaporte para o banco
+    },
+    body: JSON.stringify({ 
+      mensagem: textoEnviado, 
+      // Repare: o thread_id não é mais necessário aqui, 
+      // o backend já sabe quem você é pelo Token!
+    }),
+  });
 
-    const data = await response.json();
+  // Se o servidor disser que o token não vale mais (401)
+  if (response.status === 401) {
+    localStorage.removeItem('kanban_token');
+    window.location.reload(); // Recarrega para gerar um novo
+    return;
+  }
 
-    setMensagens(prev => [...prev, { id: Date.now(), role: 'ia', texto: data.resposta }]);
+  if (!response.ok) throw new Error("Erro na rede");
 
-    if (aoAtualizarBanco) {
-      aoAtualizarBanco();
-    }
+  const data = await response.json();
 
-  } catch (error) {
-    console.error("Erro ao enviar mensagem:", error);
-    setMensagens(prev => [...prev, { 
-      id: Date.now(), 
-      role: 'ia', 
-      texto: "Desculpe, tive um problema de conexão com o servidor." 
-    }]);
-  } finally {
+  // Adiciona a resposta da IA na tela
+  setMensagens(prev => [...prev, { 
+    id: Date.now(), 
+    role: 'ia', 
+    texto: data.resposta 
+  }]);
+
+  // Se a IA criou/moveu algo, o Kanban dá aquele refresh maroto
+  if (aoAtualizarBanco) {
+    aoAtualizarBanco();
+  }
+
+} catch (error) {
+  console.error("Erro no chat:", error);
+  setMensagens(prev => [...prev, { 
+    id: Date.now(), 
+    role: 'ia', 
+    texto: "Ops, tive um probleminha na conexão. Pode tentar de novo?" 
+  }]);
+} finally {
     setIsLoading(false); 
   }
 };
