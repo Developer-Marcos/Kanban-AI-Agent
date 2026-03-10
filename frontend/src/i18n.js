@@ -13,9 +13,11 @@ i18n.use(initReactI18next).init({
         "coluna_andamento": "Em Andamento",
         "coluna_concluido": "Concluído",
         "boas_vindas": "Olá! Eu sou o seu Assistente de Tarefas. O que vamos organizar hoje?",
-        // 🎯 Novas chaves para o exemplo:
-        "msg_usuario_ex": "Preciso organizar as minhas tarefas pendentes da faculdade.",
-        "msg_ia_resp_ex": "Perfeito! Vou buscar suas anotações mais recentes e criar os cards para você. Um momento..."
+        "tooltip_limpar": "Limpar conversa",
+        "modal_limpar_titulo": "Limpar Chat",
+        "modal_limpar_desc": "Tem certeza que deseja apagar o histórico dessa conversa?",
+        "botao_cancelar": "Cancelar",
+        "botao_confirmar": "Apagar"
       }
     },
     en: {
@@ -27,13 +29,15 @@ i18n.use(initReactI18next).init({
         "coluna_andamento": "In Progress",
         "coluna_concluido": "Done",
         "boas_vindas": "Hello! I am your Task Assistant. What shall we organize today?",
-        // 🎯 Novas chaves para o exemplo (Inglês padrão):
-        "msg_usuario_ex": "I need to organize my pending college tasks.",
-        "msg_ia_resp_ex": "Perfect! I'll look for your most recent notes and create the cards for you. Just a moment..."
+        "tooltip_limpar": "Clear chat",
+        "modal_limpar_titulo": "Clear Chat",
+        "modal_limpar_desc": "Are you sure you want to delete this conversation history?",
+        "botao_cancelar": "Cancel",
+        "botao_confirmar": "Delete"
       }
     }
   },
-  lng: "en", // 🎯 AGORA O PADRÃO É INGLÊS
+  lng: "en",
   fallbackLng: "en",
   interpolation: { escapeValue: false }
 });

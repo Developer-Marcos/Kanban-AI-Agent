@@ -1,16 +1,24 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List
 import schemas
 import models
 from database import engine, pegar_db
-from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from agent import agente
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Kanban To-Do API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"], 
+    allow_credentials=True,
+    allow_methods=["*"],  
+    allow_headers=["*"],  
+)
 
 
 @app.get("/")
@@ -26,19 +34,19 @@ class ChatRequest(BaseModel):
 def conversar_com_ia(request: ChatRequest):
       try:
             config_thread = {"configurable": {"thread_id": request.thread_id}}
-
+            
             resultado = agente.invoke(
                   {"messages": [("user", request.mensagem)]},
                   config = config_thread     
             )
 
             ultima_msg = resultado["messages"][-1]
+            texto_limpo = ultima_msg.content if hasattr(ultima_msg, 'content') else ultima_msg
+            
+            if isinstance(texto_limpo, list):
+                  texto_limpo = "".join([b.get("text", "") for b in texto_limpo if isinstance(b, dict) and "text" in b])
 
-            texto_limpo = ultima_msg
-            if isinstance(ultima_msg, list):
-                  texto_limpo = "".join([b.get("text", "") for b in ultima_msg if isinstance(b, dict) and "text" in b])
-
-            return {"resposta": texto_limpo}
+            return {"resposta": str(texto_limpo)}
       
       except Exception as e:
             raise HTTPException(status_code=500, detail=f"Erro interno no agente: {str(e)}")

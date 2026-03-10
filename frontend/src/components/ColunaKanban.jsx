@@ -6,7 +6,7 @@ export function CardEsqueleto({ altura }) {
 
 export function ColunaKanban({ titulo, children }) {
   return (
-    <div className="bg-white/30 rounded-2xl p-4 border border-white/50 flex flex-col gap-4 shadow-sm overflow-y-auto">
+    <div className="bg-white/30 rounded-2xl p-4 border border-white/50 flex flex-col gap-4 shadow-sm overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/60 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/80 transition-all ">
       {titulo && (
         <div className="h-8 shrink-0 bg-white/70 rounded-lg w-full flex items-center px-3 font-semibold text-gray-700 shadow-sm">
           {titulo}
