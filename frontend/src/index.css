@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); } /* Aumenta 10% no meio do ciclo */
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
