@@ -19,7 +19,9 @@ from ai_tools import (
 )
 
 # Variaveis do ambiente
-load_dotenv()
+if not load_dotenv():
+    load_dotenv("../.env")
+    
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")
 

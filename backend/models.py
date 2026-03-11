@@ -19,19 +19,17 @@ tarefas_tags = Table(
 )
 
 class Tarefa(Base):
-      __tablename__ = "tarefas"
+    __tablename__ = "tarefas"
 
-      id = Column(Integer, primary_key=True, index=True)
-      usuario_id = Column(String, index=True, nullable=False)
-      titulo = Column(String(255), nullable=False)
-      desc = Column(Text, nullable=True)
-      status = Column(Enum(StatusEnum), default=StatusEnum.A_FAZER, nullable=False)
-      criado_em = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
-      data_limite = Column(DateTime(timezone=True), nullable=True)
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(String, index=True, nullable=False)
+    titulo = Column(String(255), nullable=False)
+    desc = Column(Text, nullable=True)
+    status = Column(Enum(StatusEnum), default=StatusEnum.A_FAZER, nullable=False)
+    criado_em = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    data_limite = Column(DateTime(timezone=True), nullable=True)
 
-      tags = relationship("Tag", secondary=tarefas_tags, back_populates="tarefas")
-
- # Adicione este import lá no topo
+    tags = relationship("Tag", secondary=tarefas_tags, back_populates="tarefas")
 
 class Tag(Base):
     __tablename__ = "tags"
@@ -50,4 +48,4 @@ class MensagemChat(Base):
     usuario_id = Column(String, index=True, nullable=False)
     role = Column(String) # 'ia' ou 'user'
     texto = Column(Text, nullable=False)
-    criado_em = Column(DateTime(timezone=True), server_default=func.now())
+    criado_em = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)

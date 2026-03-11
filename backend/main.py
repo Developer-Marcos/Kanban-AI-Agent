@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -6,28 +7,42 @@ import jwt
 import uuid
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
-
+import json
 import schemas
 import models
 from database import engine, pegar_db
 from agent import agente
 from ai_tools import token_auth
 
-# Inicializa as tabelas
-models.Base.metadata.create_all(bind=engine)
+def inicializar_banco():
+    try:
+        models.Base.metadata.create_all(bind=engine)
+        print("Banco de dados verificado/criado com sucesso.")
+    except Exception as e:
+        print(f"Aviso na inicialização do banco: {e}")
+
+inicializar_banco()
 
 app = FastAPI(title="Kanban To-Do API")
 
+origens_permitidas = os.getenv(
+    "CORS_ORIGINS", 
+    '["http://localhost:5173"]'
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], 
+    allow_origins=json.loads(origens_permitidas), 
     allow_credentials=True,
     allow_methods=["*"],  
     allow_headers=["*"],  
 )
 
-SECRET_KEY = "sua_chave_secreta_super_aleatoria_aqui"
+SECRET_KEY = os.getenv("SECRET_KEY", "chave_padrao_apenas_para_desenvolvimento_local")
 ALGORITHM = "HS256"
+
+if SECRET_KEY == "chave_padrao_apenas_para_desenvolvimento_local":
+    print("AVISO: Usando SECRET_KEY padrão. NÃO USAR EM PRODUCAO")
 
 # --- UTILITÁRIOS DE SEGURANÇA ---
 
@@ -93,7 +108,17 @@ def obter_historico(db: Session = Depends(pegar_db), usuario_id: str = Depends(o
              .filter(models.MensagemChat.usuario_id == usuario_id)\
              .order_by(models.MensagemChat.criado_em.asc()).all()
 
-# --- CRUD DE TAREFAS (COM ISOLAMENTO) ---
+@app.delete("/chat/historico")
+def limpar_historico(db: Session = Depends(pegar_db), usuario_id: str = Depends(obter_usuario_logado)):
+    try:
+        db.query(models.MensagemChat).filter(models.MensagemChat.usuario_id == usuario_id).delete()
+        db.commit()
+        return {"status": "Histórico apagado com sucesso"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# --- CRUD DE TAREFAS ---
 
 @app.get("/tarefas", response_model=List[schemas.Tarefa])
 def listar_tarefas(db: Session = Depends(pegar_db), usuario_id: str = Depends(obter_usuario_logado)):
@@ -101,7 +126,7 @@ def listar_tarefas(db: Session = Depends(pegar_db), usuario_id: str = Depends(ob
 
 @app.post("/tarefas", response_model=schemas.Tarefa)
 def criar_tarefa(tarefa: schemas.CriarTarefa, db: Session = Depends(pegar_db), usuario_id: str = Depends(obter_usuario_logado)):
-    nova_tarefa = models.Tarefa(**tarefa.dict(exclude={"tags"}), usuario_id=usuario_id)
+    nova_tarefa = models.Tarefa(**tarefa.model_dump(exclude={"tags"}), usuario_id=usuario_id)
     
     if tarefa.tags:
         for nome_tag in tarefa.tags:
@@ -120,7 +145,7 @@ def atualizar_tarefa(tarefa_id: int, tarefa_upd: schemas.AtualizarTarefa, db: Se
     tarefa_db = db.query(models.Tarefa).filter(models.Tarefa.id == tarefa_id, models.Tarefa.usuario_id == usuario_id).first()
     if not tarefa_db: raise HTTPException(status_code=404, detail="Não encontrado")
     
-    dados = tarefa_upd.dict(exclude_unset=True, exclude={"tags"})
+    dados = tarefa_upd.model_dump(exclude_unset=True, exclude={"tags"})
     for key, value in dados.items(): setattr(tarefa_db, key, value)
 
     if tarefa_upd.tags is not None:

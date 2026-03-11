@@ -1,10 +1,11 @@
+import os
 import requests
 import unicodedata
 import contextvars
 from langchain_core.tools import tool
 from typing import Union
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 # Variável de contexto para guardar o token da requisição atual
 token_auth = contextvars.ContextVar('token_auth', default="")
@@ -26,8 +27,7 @@ def buscar_id_por_nome(nome_busca: str) -> Union[int, str]:
     Versão 2.0: Busca inteligente com remoção de stop-words e normalização.
     """
     try:
-        # 🎯 HEADER ADICIONADO AQUI
-        resposta = requests.get(f"{API_BASE_URL}/tarefas", headers=obter_headers())
+        resposta = requests.get(f"{API_BASE_URL}/tarefas", headers=obter_headers(), timeout=20)
         if resposta.status_code != 200:
             return "Erro ao acessar o banco de dados."
         
@@ -105,8 +105,7 @@ def criar_tarefa_tool(titulo: str, desc: str = None, status: str = "A_FAZER", da
     if tags is not None:
         tarefa_payload["tags"] = tags
 
-    # 🎯 HEADER ADICIONADO AQUI
-    resposta = requests.post(f"{API_BASE_URL}/tarefas", json=tarefa_payload, headers=obter_headers())
+    resposta = requests.post(f"{API_BASE_URL}/tarefas", json=tarefa_payload, headers=obter_headers(), timeout=20)
 
     if resposta.status_code == 200:
         dados = resposta.json()
@@ -151,8 +150,7 @@ def atualizar_tarefa_tool(
     if not tarefa_payload:
         return f"A tarefa '{nome_tarefa_busca or tarefa_id}' foi encontrada, mas você não informou nenhum dado novo para atualizar."
     
-    # 🎯 HEADER ADICIONADO AQUI
-    resposta = requests.put(f"{API_BASE_URL}/tarefas/{tarefa_id}", json=tarefa_payload, headers=obter_headers())
+    resposta = requests.put(f"{API_BASE_URL}/tarefas/{tarefa_id}", json=tarefa_payload, headers=obter_headers(), timeout=20)
 
     if resposta.status_code == 200:
         return f"Sucesso! Tarefa {tarefa_id} atualizada com os dados: {tarefa_payload}"
@@ -171,8 +169,7 @@ def deletar_tarefa_tool(nome_tarefa_busca: str = None, tarefa_id: int = None) ->
         if isinstance(resultado, str): return resultado
         tarefa_id = resultado
     
-    # 🎯 HEADER ADICIONADO AQUI
-    resposta = requests.delete(f"{API_BASE_URL}/tarefas/{tarefa_id}", headers=obter_headers())
+    resposta = requests.delete(f"{API_BASE_URL}/tarefas/{tarefa_id}", headers=obter_headers(), timeout=20)
     return f"Tarefa {tarefa_id} excluída com sucesso." if resposta.status_code == 200 else f"Erro: {resposta.text}"
 
 # Ler tarefas
@@ -184,8 +181,7 @@ def buscar_tarefas_tool(status: str = None, termo_busca: str = None):
     pedir detalhes de uma tarefa específica, ou perguntar o que está com um status específico.
     """
     try:
-        # 🎯 HEADER ADICIONADO AQUI
-        resposta = requests.get(f"{API_BASE_URL}/tarefas", headers=obter_headers())
+        resposta = requests.get(f"{API_BASE_URL}/tarefas", headers=obter_headers(), timeout=20)
         if resposta.status_code != 200:
             return "Erro ao acessar o banco de dados para buscar tarefas."
             

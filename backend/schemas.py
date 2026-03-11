@@ -14,7 +14,7 @@ class Tarefa(BaseModel):
       id: int
       titulo: str
       desc: Optional[str] = None
-      status: str
+      status: StatusEnum
       data_limite: Optional[datetime] = None
       criado_em: datetime
       tags: List[Tag] = []

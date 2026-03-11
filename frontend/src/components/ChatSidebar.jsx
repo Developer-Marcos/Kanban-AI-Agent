@@ -39,10 +39,66 @@ export function ChatSidebar({ aoAtualizarBanco }) {
     i18n.changeLanguage(novoIdioma);
   };
 
-  const confirmarLimpeza = () => {
-    setMensagens([{ id: 1, role: 'ia', texto: t('boas_vindas') }]);
-    setMostrarConfirmacao(false);
-  };
+const confirmarLimpeza = async () => {
+  const token = localStorage.getItem('kanban_token');
+  if (!token) return;
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/historico`, {
+      method: 'DELETE',
+      headers: { 
+        'Authorization': `Bearer ${token}` 
+      }
+    });
+
+    if (response.ok) {
+      // 2. Se o banco confirmou que apagou, a gente limpa a tela e fecha o modal
+      setMensagens([{ id: 1, role: 'ia', texto: t('boas_vindas') }]);
+      setMostrarConfirmacao(false);
+    } else {
+      console.error("Erro ao apagar histórico no servidor.");
+    }
+  } catch (error) {
+    console.error("Erro na rede ao tentar apagar o chat:", error);
+  }
+};
+
+  useEffect(() => {
+    const carregarHistorico = async () => {
+      const token = localStorage.getItem('kanban_token');
+      if (!token) return; // Se não tem token, nem tenta buscar
+
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/historico`, {
+          method: 'GET',
+          headers: { 
+            'Authorization': `Bearer ${token}` 
+          }
+        });
+
+        if (response.ok) {
+          const dados = await response.json();
+          
+          if (dados.length > 0) {
+            const historicoFormatado = dados.map(msg => ({
+              id: msg.id,
+              role: msg.role,
+              texto: msg.texto
+            }));
+            
+            setMensagens(prev => {
+              const msgBoasVindas = prev.find(m => m.id === 1);
+              return [msgBoasVindas, ...historicoFormatado].filter(Boolean);
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar o histórico do chat:", error);
+      }
+    };
+
+    carregarHistorico();
+  }, []);
 
   useEffect(() => {
     chatFimRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -61,7 +117,7 @@ export function ChatSidebar({ aoAtualizarBanco }) {
   try {
   const token = localStorage.getItem('kanban_token');
 
-  const response = await fetch('http://localhost:8000/chat', {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -69,15 +125,12 @@ export function ChatSidebar({ aoAtualizarBanco }) {
     },
     body: JSON.stringify({ 
       mensagem: textoEnviado, 
-      // Repare: o thread_id não é mais necessário aqui, 
-      // o backend já sabe quem você é pelo Token!
     }),
   });
 
-  // Se o servidor disser que o token não vale mais (401)
   if (response.status === 401) {
     localStorage.removeItem('kanban_token');
-    window.location.reload(); // Recarrega para gerar um novo
+    window.location.reload(); 
     return;
   }
 
@@ -85,14 +138,12 @@ export function ChatSidebar({ aoAtualizarBanco }) {
 
   const data = await response.json();
 
-  // Adiciona a resposta da IA na tela
   setMensagens(prev => [...prev, { 
     id: Date.now(), 
     role: 'ia', 
     texto: data.resposta 
   }]);
 
-  // Se a IA criou/moveu algo, o Kanban dá aquele refresh maroto
   if (aoAtualizarBanco) {
     aoAtualizarBanco();
   }
