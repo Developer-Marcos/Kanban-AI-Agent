@@ -44,6 +44,30 @@ The **Kortex AI System architecture** operates on a *microservices framework* wh
 3. If necessary, the *AI* ​​triggers *customized Tools* that interact with the task *API*.
 4. The result is *persisted in **PostgreSQL*** and *instantly reflected in the React Frontend*.
 
+### AI Agent Graph:
+```mermaid
+---
+config:
+  flowchart:
+    curve: linear
+---
+%%{init: { 'theme': 'dark', 'themeVariables': { 'primaryColor': '#534a96', 'edgeLabelBackground':'#1e1e2e', 'tertiaryColor': '#2d2d2d' } } }%%
+graph LR;
+        __start__([<p>__start__</p>]):::first
+        Agente(Agent)
+        Ferramentas(Tools)
+        __end__([<p>__end__</p>]):::last
+
+        __start__ --> Agente;
+        Agente -. &nbsp;calls tools&nbsp; .-> Ferramentas;
+        Ferramentas --> Agente;
+        Agente -. &nbsp;final response&nbsp; .-> __end__;
+
+        %% Estilização para o Tema Dark do GitHub %%
+        classDef default fill:#2d2d2d,stroke:#666,color:#fff,line-height:1.2
+        classDef first fill-opacity:0,stroke:#666,color:#aaa
+        classDef last fill:#534a96,stroke:#7b6dfa,color:#fff
+```
 ---
 
 ## How to use:
