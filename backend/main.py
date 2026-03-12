@@ -29,7 +29,7 @@ app = FastAPI(title="Kanban To-Do API")
 
 origens_permitidas = os.getenv(
     "CORS_ORIGINS", 
-    '["http://localhost:5173"]'
+    '["http://localhost:5173", "https://kortex-frontend-1075947428559.us-east4.run.app"]'
 )
 
 app.add_middleware(

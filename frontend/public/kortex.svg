@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
+  <defs>
+    <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9A8FF" /> <stop offset="100%" stop-color="#88E2F2" /> </linearGradient>
+  </defs>
+
+    <path d="M 45,20 C 45,39 37,45 18,45 C 37,45 45,51 45,70 C 45,51 53,45 72,45 C 53,45 45,39 45,20 Z" fill="url(#aiGradient)" />
+
+    <path d="M 72,22 C 72,29 68,32 60,32 C 68,32 72,35 72,42 C 72,35 76,32 84,32 C 76,32 72,29 72,22 Z" fill="url(#aiGradient)" />
+
+  <path d="M 72, 60 C 72, 67 68, 70 60, 70 C 68, 70 72, 73 72, 80 C 72, 73 76, 70 84, 70 C 76, 70 72, 67 72, 60 Z" fill="url(#aiGradient)" />
+
+</svg>
