@@ -23,7 +23,8 @@ def remover_acentos(texto: str) -> str:
 
 def buscar_id_por_nome(nome_busca: str) -> Union[int, str]:
     """
-    Busca inteligente com remoção de stop-words e normalização.
+    Busca ultra-inteligente (Fuzzy Search Python-side).
+    Otimizada para encontrar 'sync' em 'sync com o time de design'.
     """
     try:
         resposta = requests.get(f"{API_BASE_URL}/tarefas", headers=obter_headers(), timeout=20)
@@ -31,35 +32,39 @@ def buscar_id_por_nome(nome_busca: str) -> Union[int, str]:
             return "Erro ao acessar o banco de dados."
         
         tarefas = resposta.json()
-        busca_original_limpa = remover_acentos(nome_busca)
+        busca_limpa = remover_acentos(nome_busca)
         
+        if not busca_limpa:
+            return "Nome de busca inválido."
+
+        # 1. TENTATIVA: Match Exato (Ignorando acentos/case)
         for t in tarefas:
-            if busca_original_limpa == remover_acentos(t["titulo"]):
+            if busca_limpa == remover_acentos(t["titulo"]):
                 return t["id"]
 
-        stop_words = [
-            "tarefa", "de", "da", "do", "o", "a", "os", "as", "um", "uma", 
-            "para", "com", "meu", "minha", "ir", "ver", "passar", "mudar", 
-            "colocar", "como", "no", "na", "status", "marcar", "finalizada"
-        ]
+        # 2. TENTATIVA: Match de Substring (Estilo ILIKE do SQL)
+        # Se o que o usuário buscou está contido no título (ou vice-versa)
+        matches_parciais = []
+        for t in tarefas:
+            titulo_t_limpo = remover_acentos(t["titulo"])
+            if busca_limpa in titulo_t_limpo or titulo_t_limpo in busca_limpa:
+                matches_parciais.append(t)
         
-        palavras_relevantes = [
-            p for p in busca_original_limpa.split() 
-            if p not in stop_words and len(p) > 2
-        ]
+        # Se achou apenas um match por proximidade, assume que é esse (ajuda nos testes!)
+        if len(matches_parciais) == 1:
+            return matches_parciais[0]["id"]
+
+        # 3. TENTATIVA: Ranking por palavras-chave (Fallback)
+        stop_words = ["tarefa", "de", "da", "do", "o", "a", "os", "as", "um", "uma", "para", "com"]
+        palavras_relevantes = [p for p in busca_limpa.split() if p not in stop_words and len(p) > 2]
         
-        if not palavras_relevantes:
-            palavras_relevantes = busca_original_limpa.split()
+        if not palavras_relevantes: 
+            palavras_relevantes = busca_limpa.split()
 
         ranking = []
-
         for t in tarefas:
             titulo_limpo = remover_acentos(t["titulo"])
-            pontos = 0
-            for palavra in palavras_relevantes:
-                if palavra in titulo_limpo:
-                    pontos += 1
-            
+            pontos = sum(1 for palavra in palavras_relevantes if palavra in titulo_limpo)
             if pontos > 0:
                 ranking.append((pontos, t))
         
@@ -68,14 +73,15 @@ def buscar_id_por_nome(nome_busca: str) -> Union[int, str]:
         if not ranking:
             return f"Nenhuma tarefa encontrada para '{nome_busca}'."
 
+        # Se o primeiro lugar for claramente melhor que o segundo, retorna ele
         if len(ranking) == 1 or ranking[0][0] > ranking[1][0]:
             return ranking[0][1]["id"]
         
+        # Caso contrário, retorna a lista de IDs (A IA terá que perguntar)
         maior_pontuacao = ranking[0][0]
         empatadas = [item[1] for item in ranking if item[0] == maior_pontuacao]
-        
         ids_nomes = [f"#{t['id']} '{t['titulo']}'" for t in empatadas]
-        return f"Encontrei tarefas parecidas: {', '.join(ids_nomes)}. Qual delas você prefere?"
+        return f"Múltiplas tarefas encontradas: {', '.join(ids_nomes)}. Seja mais específico."
 
     except Exception as e:
         return f"Erro na busca: {str(e)}"

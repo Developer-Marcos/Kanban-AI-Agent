@@ -1,0 +1,19 @@
+# Ignora caches do Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Ignora ambientes virtuais
+venv/
+.venv/
+
+# Ignora variáveis locais
+.env
+
+# Ignora arquivos do Git
+.git
+.gitignore
+
+# Ignora os testes na imagem de produção
+tests/

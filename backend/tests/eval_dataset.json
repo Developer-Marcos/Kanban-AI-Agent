@@ -1,0 +1,137 @@
+[
+  {
+    "input": "Cria um card pra eu revisar a arquitetura do banco de dados amanhã de manhã.",
+    "expected_intent": "INSERT",
+    "expected_args": {
+      "has_deadline": true,
+      "has_tags": true,
+      "status_expected": "A_FAZER"
+    }
+  },
+  {
+    "input": "Create a new task: Prepare the weekly report and set it to In progress",
+    "expected_intent": "INSERT",
+    "expected_args": {
+      "status_expected": "EM_PROGRESSO",
+      "has_tags": true
+    }
+  },
+  {
+    "input": "A tarefa de documentar a API já foi feita, passa ela pra concluída.",
+    "expected_intent": "UPDATE",
+    "expected_args": {
+      "status_expected": "FEITO"
+    }
+  },
+  {
+    "input": "Mostra tudo que eu tenho na coluna In Progress.",
+    "expected_intent": "SELECT",
+    "expected_args": {
+      "status_filter": "EM_PROGRESSO"
+    }
+  },
+  {
+    "input": "Atualiza a tarefa de login, muda o prazo pra próxima sexta-feira.",
+    "expected_intent": "UPDATE",
+    "expected_args": {
+      "has_deadline": true
+    }
+  },
+  {
+    "input": "Deleta o card de reunião de alinhamento.",
+    "expected_intent": "DELETE",
+    "expected_args": {}
+  },
+  {
+    "input": "Adiciona: estudar LangSmith e testes automatizados para esse final de semana.",
+    "expected_intent": "INSERT",
+    "expected_args": {
+      "has_deadline": true,
+      "has_tags": true
+    }
+  },
+  {
+    "input": "Quais são as tarefas com a tag 'urgente'?",
+    "expected_intent": "SELECT",
+    "expected_args": {
+      "has_tag_filter": true
+    }
+  },
+  {
+    "input": "Tem alguma coisa agendada pra amanhã?",
+    "expected_intent": "SELECT",
+    "expected_args": {
+      "has_time_filter": true
+    }
+  },
+  {
+    "input": "Faz um card pra lembrar de pagar a conta de luz.",
+    "expected_intent": "INSERT",
+    "expected_args": {
+      "has_deadline": false,
+      "status_expected": "A_FAZER"
+    }
+  },
+  {
+    "input": "Muda o status da tarefa 'Refatorar código' para In Progress.",
+    "expected_intent": "UPDATE",
+    "expected_args": {
+      "status_expected": "EM_PROGRESSO"
+    }
+  },
+  {
+    "input": "Cria uma tag chamada 'bug' na tarefa de corrigir o erro 500.",
+    "expected_intent": "UPDATE",
+    "expected_args": {
+      "has_tags": true
+    }
+  },
+  {
+    "input": "Remove the task named 'Tarefa Antiga Concluída'.",
+    "expected_intent": "DELETE",
+    "expected_args": {
+      "status_filter": "FEITO"
+    }
+  },
+  {
+    "input": "Puxa pra mim os cards que estão atrasados.",
+    "expected_intent": "SELECT",
+    "expected_args": {
+      "has_time_filter": true
+    }
+  },
+  {
+    "input": "O que você acha sobre a nova atualização do Python?",
+    "expected_intent": "NONE",
+    "expected_args": {}
+  },
+  {
+    "input": "Edita o título da tarefa 'Criar repo' para 'Criar repositório do Github'.",
+    "expected_intent": "UPDATE",
+    "expected_args": {}
+  },
+  {
+    "input": "DROP TABLE users;",
+    "expected_intent": "NONE",
+    "expected_args": {}
+  },
+  {
+    "input": "Cria um card de DevOps, outro de Frontend e me mostra como ficou o board.",
+    "expected_intent": "MULTIPLE",
+    "expected_args": {
+      "minimum_operations": 2
+    }
+  },
+  {
+    "input": "Preciso entregar o relatório até o final do mês.",
+    "expected_intent": "INSERT",
+    "expected_args": {
+      "has_deadline": true
+    }
+  },
+  {
+    "input": "Cancela a sync com o time de design e tira isso do meu board.",
+    "expected_intent": "DELETE",
+    "expected_args": {}
+  }
+]

@@ -22,11 +22,17 @@ from ai_tools import (
 if not load_dotenv():
     load_dotenv("../.env")
     
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")
+chave_bruta = os.getenv("GOOGLE_API_KEY", "")
+GOOGLE_API_KEY = chave_bruta.strip().replace('"', '').replace("'", "")
+
+modelo_bruto = os.getenv("MODEL_NAME", "gemini-2.5-flash")
+MODEL_NAME = modelo_bruto.strip().replace('"', '').replace("'", "")
 
 if not GOOGLE_API_KEY:
-      raise ValueError("Chave de API do Google não encontrada, verifique o arquivo .env")
+    raise ValueError("Chave de API do Google não encontrada, verifique o arquivo .env")
+
+os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+os.environ["GEMINI_API_KEY"] = GOOGLE_API_KEY
 
 # Inicializacao do modelo de LLM e conectando ele com as ferramentas
 llm = ChatGoogleGenerativeAI(model = MODEL_NAME, api_key = GOOGLE_API_KEY, temperature = 0)
