@@ -6,7 +6,9 @@
 
 **Kortex AI** is an *intelligent task management system* **(ReAct Agent)** that combines the visual clarity of a Kanban board with the *processing power of an **LLM-based AI Agent***. Unlike a typical to-do list, Kortex AI understands natural language, manages time contexts, and automatically organizes tags to optimize workflow.
 
-**[Test Kortex AI Live Here](https://kortex-frontend-1075947428559.us-east4.run.app)** 
+###### Desktop site version only
+
+**[Test Kortex AI Live Here](https://kortex-frontend-1075947428559.us-east4.run.app)**  
 
 <p></p>
 
