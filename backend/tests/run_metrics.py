@@ -33,7 +33,7 @@ def sessao_teste():
     db.query(Tarefa).filter(Tarefa.usuario_id == usuario_id).delete()
     db.commit()
     db.close()
-    print("\n✅ Setup finalizado: Banco limpo e usuário removido.")
+    print("\n Setup finalizado: Banco limpo e usuário removido.")
 
 def preparar_cenario_db(db, usuario_id, prompt):
     """
@@ -42,8 +42,7 @@ def preparar_cenario_db(db, usuario_id, prompt):
     """
     prompt_lower = prompt.lower()
     tarefas_para_injetar = []
-
-    # Mapeamento de termos do prompt para títulos no banco
+    
     mapeamento = {
         "documentar a api": "documentar a API",
         "reunião de alinhamento": "reunião de alinhamento",
@@ -52,12 +51,11 @@ def preparar_cenario_db(db, usuario_id, prompt):
         "criar repo": "Criar repo",
         "sync com o time de design": "sync com o time de design",
         "tarefa de login": "Tarefa de login",
-        "concluídas": "Tarefa Antiga Concluída" # Para o teste de deletar concluídas
+        "concluídas": "Tarefa Antiga Concluída"
     }
 
     for termo, titulo_real in mapeamento.items():
         if termo in prompt_lower:
-            # Verifica se já existe para não duplicar
             existe = db.query(Tarefa).filter(Tarefa.usuario_id == usuario_id, Tarefa.titulo == titulo_real).first()
             if not existe:
                 status_inicial = "FEITO" if termo == "concluídas" else "A_FAZER"
@@ -76,35 +74,30 @@ def test_agente_deve_executar_operacao_correta(caso_de_teste, sessao_teste):
     headers = {"Authorization": f"Bearer {sessao_teste['token']}"}
     
     db = SessaoLocal()
-    # Garante que o alvo da ação existe
     preparar_cenario_db(db, usuario_id, prompt)
     qtd_antes = db.query(Tarefa).filter(Tarefa.usuario_id == usuario_id).count()
     db.close()
 
-    # Execução
     resposta = requests.post("http://localhost:8000/chat", json={"mensagem": prompt}, headers=headers)
     assert resposta.status_code == 200, f"Erro na API: {resposta.status_code}"
     
-    time.sleep(4) # Pausa para o Gemini e o Banco
+    time.sleep(4)
     
     db = SessaoLocal()
     tarefas_depois = db.query(Tarefa).filter(Tarefa.usuario_id == usuario_id).all()
     qtd_depois = len(tarefas_depois)
     
     if intent_esperada == "INSERT":
-        # Se falhou aqui, a IA achou que a tarefa já existia e deu UPDATE em vez de INSERT
         assert qtd_depois > qtd_antes, f"FALHA INSERT: IA não criou a tarefa para: '{prompt}'"
         if "status_expected" in args_esperados:
             assert tarefas_depois[-1].status.value == args_esperados["status_expected"]
             
     elif intent_esperada == "UPDATE":
-        # Se falhou aqui, a IA não achou a tarefa pelo nome
         if "status_expected" in args_esperados:
             status_correto = any(t.status.value == args_esperados["status_expected"] for t in tarefas_depois)
             assert status_correto, f"FALHA UPDATE: IA não alterou o status para: '{prompt}'"
 
     elif intent_esperada == "DELETE":
-        # Se falhou aqui, a IA não achou a tarefa para apagar
         assert qtd_depois < qtd_antes, f"FALHA DELETE: IA não apagou a tarefa para: '{prompt}'"
 
     elif intent_esperada in ["SELECT", "NONE"]:
